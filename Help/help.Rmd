@@ -1,0 +1,84 @@
+---
+title: "HELP"
+author: "jcb"
+date: "15 mai 2015"
+output: html_document
+---
+
+
+```{r init, message=FALSE}
+options(digits = 3)
+options(width = 72) # rétrécit la sortie
+
+library(dplyr)
+
+file <- "http://www.amherst.edu/~nhorton/r2/datasets/help.csv"
+ds <- read.csv(file)
+```
+On réduit le nombre de variables de 88 à 26
+```{r}
+newds <- select(ds, cesd, female, i1, i2, id, treat, f1a, f1b, f1c, f1d, f1e, f1f, f1g, f1h, f1i, f1j, f1k, f1l, f1m, f1n, f1o, f1p, f1q, f1r, f1s, f1t)
+names(newds)
+str(newds)
+summary(newds[1:10])
+
+```
+Affichage des premières lignes.
+```{r}
+head(newds, n = 3)
+```
+Sauvegarde du dataset en format natif pour faciliter une utilisation ultérieure. On ajoute également un commentaire
+```{r}
+comment(newds) <- "Ficher HELP original"
+comment(newds)
+save(ds, file = "savedfile")
+```
+
+Sauvegarde au format .csv
+```{r}
+write.csv(ds, file = "ds.csv")
+```
+
+Transformations complexes
+-------------------------
+
+La fonction __mutate__ (dplyr) crée une nouvelle variable par transformation d'une variable. Par exemple, on crée une variable __sex__ à partir de la variable __female__ en lui attribuant la valeur __H__ ou __F__.
+```{r mutate}
+ds2 <- mutate(ds, sex = ifelse(female == 1, "F", "H"))
+```
+
+La fonction __filter__ permet de sélectionner des __lignes__ à partir d'un critère. Par exemple on ne garde que les lignes où _pcs_ n'est pas égal à NA:
+```{r filter}
+ds3 <- filter(ds2, !is.na(pcs))
+```
+
+La fonction __select__ permet de restreindre le nombre de variables (colonnes):
+```{r select}
+ds4 <- select(ds3, age, pcs, sex)
+head(ds4)
+```
+
+La fonction __group_by__ permet de rassembler les variables, par exemple pour faire un groupe d'hommes et de femmes:
+```{r group}
+ds5 <- group_by(ds4, sex)
+```
+
+La fonction __summarise__ permet de faire des calculs par groupes. Par exemple calculer les moyennes et les tailles des groupes hommes et femmes:
+```{r}
+summarise(ds5, age.moyen = mean(age), pcs.moyen = mean(pcs), N = n())
+```
+__n()__ calcule le nombre d'observations dans le groupe courant.
+
+Toutes ces opérations peuvent être faites en une seule avec l'opérateur _pipe_ __%>%__
+```{r pipe}
+ds %>%
+  mutate(sex = ifelse(female == 1, "F", "H")) %>%
+  filter(!is.na(pcs)) %>%
+  select(age, pcs, sex) %>%
+  group_by(sex) %>%
+  summarise(age.moyen = mean(age), pcs.moyen = mean(pcs), N = n())
+```
+
+
+
+
