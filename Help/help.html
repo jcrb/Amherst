@@ -71,6 +71,8 @@ img {
 options(width = 72) # rétrécit la sortie
 
 library(dplyr)
+library(tidyr)
+library(knitr)
 
 file &lt;- &quot;http://www.amherst.edu/~nhorton/r2/datasets/help.csv&quot;
 ds &lt;- read.csv(file)</code></pre>
@@ -186,6 +188,262 @@ head(ds4)</code></pre>
 ##   sex age.moyen pcs.moyen   N
 ## 1   F      36.3        45 107
 ## 2   H      35.5        49 346</code></pre>
+</div>
+<div id="conversion-de-wide-en-long" class="section level2">
+<h2>Conversion de <strong>wide</strong> en <strong>long</strong></h2>
+<p>Soit le dataframe suivant:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">id</th>
+<th align="right">female</th>
+<th align="right">inc80</th>
+<th align="right">inc81</th>
+<th align="right">inc82</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">5000</td>
+<td align="right">5500</td>
+<td align="right">6000</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">2000</td>
+<td align="right">2200</td>
+<td align="right">3300</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">3000</td>
+<td align="right">2000</td>
+<td align="right">1000</td>
+</tr>
+<tr class="even">
+<td align="right">La va</td>
+<td align="right">riable _i</td>
+<td align="right">nc_ (inc</td>
+<td align="right">ome = re</td>
+<td align="right">venu) est mal formée car elle occuppe 3 colonnes (au lieu de une) et elle comporte une variable cachée, l’année (year).</td>
+</tr>
+</tbody>
+</table>
+<p>On opère les transformations suivantes:</p>
+<ul>
+<li>d’abord on transpose le sous-tableau inc80:inc82 en créant une nouvelle variable <strong>year</strong> qui va recevoir la transposé de inc80 à inc 82, dont les différentes valeurs vont être stockées dans une nouvelle variable <strong>inc</strong>:</li>
+</ul>
+<pre class="r"><code>d2 &lt;- gather(d1, year, inc, inc80:inc82)
+kable(d2)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">id</th>
+<th align="right">female</th>
+<th align="left">year</th>
+<th align="right">inc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="left">inc80</td>
+<td align="right">5000</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">inc80</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="left">inc80</td>
+<td align="right">3000</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="left">inc81</td>
+<td align="right">5500</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">inc81</td>
+<td align="right">2200</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="left">inc81</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="left">inc82</td>
+<td align="right">6000</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">inc82</td>
+<td align="right">3300</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="left">inc82</td>
+<td align="right">1000</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>ensuite on extrait de la colonne <em>year</em> la valeur de l’année pour en faire une variable nuérique pure. On utilise la fonction <strong>extract_numeric</strong> qui à partir d’une chaine alphanumérique, extrait la partie numérique (très pratique pour transformer $250 en 250). On combine avec la fonction <strong>mutate</strong> qui permet d’ajouter ou de modifier une variable tout en préservant l’existant:</li>
+</ul>
+<pre class="r"><code>d3 &lt;- mutate(d2, year = extract_numeric(d2$year))
+kable(d3)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">id</th>
+<th align="right">female</th>
+<th align="right">year</th>
+<th align="right">inc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">80</td>
+<td align="right">5000</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">80</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">80</td>
+<td align="right">3000</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">81</td>
+<td align="right">5500</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">81</td>
+<td align="right">2200</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">81</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">82</td>
+<td align="right">6000</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">82</td>
+<td align="right">3300</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">82</td>
+<td align="right">1000</td>
+</tr>
+</tbody>
+</table>
+<p>Enfin on trie le dataframe par <strong>id</strong> et par <strong>year</strong> avec la fonction <strong>arrange</strong>:</p>
+<pre class="r"><code>kable(arrange(d3, id, year))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">id</th>
+<th align="right">female</th>
+<th align="right">year</th>
+<th align="right">inc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">80</td>
+<td align="right">5000</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">81</td>
+<td align="right">5500</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">82</td>
+<td align="right">6000</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">80</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">81</td>
+<td align="right">2200</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">82</td>
+<td align="right">3300</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">80</td>
+<td align="right">3000</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">81</td>
+<td align="right">2000</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">82</td>
+<td align="right">1000</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

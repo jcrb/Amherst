@@ -11,6 +11,8 @@ options(digits = 3)
 options(width = 72) # rétrécit la sortie
 
 library(dplyr)
+library(tidyr)
+library(knitr)
 
 file <- "http://www.amherst.edu/~nhorton/r2/datasets/help.csv"
 ds <- read.csv(file)
@@ -78,6 +80,41 @@ ds %>%
   group_by(sex) %>%
   summarise(age.moyen = mean(age), pcs.moyen = mean(pcs), N = n())
 ```
+
+Conversion de __wide__ en __long__
+----------------------------------
+Soit le dataframe suivant:
+```{r wide, echo=FALSE}
+id <- 1:3
+female <- c(0,1,0)
+inc80 <- c(5000,2000,3000)
+inc81 <- c(5500,2200,2000)
+inc82 <- c(6000,3300,1000)
+d1 <- data.frame(id, female, inc80, inc81, inc82)
+kable(d1)
+```
+La variable _inc_ (income = revenu) est mal formée car elle occuppe 3 colonnes (au lieu de une) et elle comporte une variable cachée, l'année (year).
+
+On opère les transformations suivantes:
+
+- d'abord on transpose le sous-tableau inc80:inc82 en créant une nouvelle variable __year__ qui va recevoir la transposé de inc80 à inc 82, dont les différentes valeurs vont être stockées dans une nouvelle variable __inc__:
+```{r gather}
+d2 <- gather(d1, year, inc, inc80:inc82)
+kable(d2)
+```
+
+- ensuite on extrait de la colonne _year_ la valeur de l'année pour en faire une variable nuérique pure. On utilise la fonction __extract_numeric__ qui à partir d'une chaine alphanumérique, extrait la partie numérique (très pratique pour transformer $250 en 250). On combine avec la fonction __mutate__ qui permet d'ajouter ou de modifier une variable tout en préservant l'existant:
+```{r }
+d3 <- mutate(d2, year = extract_numeric(d2$year))
+kable(d3)
+```
+
+Enfin on trie le dataframe par __id__ et par __year__ avec la fonction __arrange__:
+```{r arrange}
+kable(arrange(d3, id, year))
+```
+
+On peut faire toutes ces opératins en une fois avex l'opérateur __%>%__.
 
 
 
